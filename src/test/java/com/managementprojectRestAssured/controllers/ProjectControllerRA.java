@@ -21,9 +21,9 @@ import io.restassured.http.ContentType;
 public class ProjectControllerRA {
 	
 	private String memberUsername, memberPassword, adminUsername, adminPassword;
-	private String adminToken, clientToken, invalidToken;
+	private String adminToken, memberToken, invalidToken;
 	
-	private Long existingProjectId, nonExistingProjectId;
+	private Long existingProjectId, nonExistingProjectId, dependentProjectId;
 	
 	private String projectName;
 	
@@ -42,7 +42,7 @@ public class ProjectControllerRA {
 		adminUsername = "verfute2005@gmail.com";
 		adminPassword = "123456";
 		
-		clientToken = TokenUtil.obtainAccessToken(memberUsername, memberPassword);
+		memberToken = TokenUtil.obtainAccessToken(memberUsername, memberPassword);
 		adminToken = TokenUtil.obtainAccessToken(adminUsername, adminPassword);
 		invalidToken = adminToken + "xpto";
 		
@@ -212,7 +212,7 @@ public class ProjectControllerRA {
 	}
 	
 	@Test
-	public void updateShouldReturnReturnProjectCreatedWhenLoggedAsAdmin() {
+	public void updateShouldReturnProjectCreatedWhenLoggedAsAdmin() {
 		JSONObject newProduct = new JSONObject(putProjectInstance);
 		
 		existingProjectId = 3L;
@@ -231,22 +231,83 @@ public class ProjectControllerRA {
 	}
 	
 	@Test
-	public void updateShouldReturnReturnResourceNotFoundWhenLoggedAsAdminAndIdNotExisting() {
+	public void updateShouldReturnForbbidenWhenLoggedAsMember() {
 		JSONObject newProduct = new JSONObject(putProjectInstance);
 		
-		nonExistingProjectId = 100L;
+		existingProjectId = 3L;
 		
 		given()
 			.header("Content.type", "application/json")
-			.header("Authorization", "Bearer " + adminToken)
+			.header("Authorization", "Bearer " + memberToken)
 			.body(newProduct)
 			.contentType(ContentType.JSON)
 			.accept(ContentType.JSON)
 		.when()
-			.put("/projects/{id}", nonExistingProjectId)
+			.put("/projects/{id}", existingProjectId)
 		.then()
-			.statusCode(404);
+			.statusCode(403);
 			
+	}
+	
+	@Test
+	public void deleteShouldReturnNotContentWhenIdExistingAndAdminLogged() {
+		existingProjectId = 5L;
+		
+		given()
+			.header("Authorization", "Bearer " + adminToken)
+		.when()
+			.delete("/projects/{id}", existingProjectId)
+		.then()
+			.statusCode(204);	
+	}
+
+	@Test
+	public void deleteShouldReturnNotFoundWhenIdDoesNotExistAndAdminLogged() throws Exception {
+		nonExistingProjectId = 100L;
+		
+		given()
+			.header("Authorization", "Bearer " + adminToken)
+		.when()
+			.delete("/projects/{id}", nonExistingProjectId)
+		.then()
+			.statusCode(404)
+			.body("status", equalTo(404));
+	}
+	
+	@Test
+	public void deleteShouldReturnBadRequestWhenIdIsDependentAndAdminLogged() throws Exception {
+		dependentProjectId = 3L;
+		
+		given()
+			.header("Authorization", "Bearer " + adminToken)
+		.when()
+			.delete("/projects/{id}", dependentProjectId)
+		.then()
+			.statusCode(400);
+	}
+	
+	@Test
+	public void deleteShouldReturnForbiddenWhenIdExistsAndClientLogged() throws Exception {
+		existingProjectId = 5L;
+		
+		given()
+			.header("Authorization", "Bearer " + memberToken)
+		.when()
+			.delete("/projects/{id}", existingProjectId)
+		.then()
+			.statusCode(403);
+	}
+	
+	@Test
+	public void deleteShouldReturnUnauthorizedWhenIdExistsAndInvalidToken() throws Exception {
+		existingProjectId = 25L;
+		
+		given()
+			.header("Authorization", "Bearer " + invalidToken)
+		.when()
+			.delete("/projects/{id}", existingProjectId)
+		.then()
+			.statusCode(401);
 	}
 	
 
