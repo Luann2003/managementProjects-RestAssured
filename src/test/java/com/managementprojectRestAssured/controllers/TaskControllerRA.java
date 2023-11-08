@@ -18,23 +18,23 @@ import com.managementprojectRestAssured.tests.TokenUtil;
 
 import io.restassured.http.ContentType;
 
-public class ProjectControllerRA {
+public class TaskControllerRA {
 	
 	private String memberUsername, memberPassword, adminUsername, adminPassword;
 	private String adminToken, memberToken, invalidToken;
 	
-	private Long existingProjectId, nonExistingProjectId, dependentProjectId;
+	private Long existingTaskId, nonExistingTaskId, dependentTaskId;
 	
-	private String projectName;
+	private String taskName;
 	
-	private Map<String, Object> postProjectInstance;
-	private Map<String, Object> putProjectInstance;
-
+	private Map<String, Object> postTaskInstance;
+	private Map<String, Object> putTaskInstance;
+	
 	@BeforeEach
 	public void setup() throws JSONException {
 		
 		baseURI = "http://localhost:8080";
-		projectName = "test 1";
+		taskName = "task 1";
 		
 		memberUsername = "maria@gmail.com";
 		memberPassword = "123456";
@@ -46,24 +46,29 @@ public class ProjectControllerRA {
 		adminToken = TokenUtil.obtainAccessToken(adminUsername, adminPassword);
 		invalidToken = adminToken + "xpto";
 		
-		postProjectInstance = new HashMap<>();
-		postProjectInstance.put("name", "meu projeto");
-		postProjectInstance.put("description", "test Description RA");
-		postProjectInstance.put("startDate", "2020-07-13T20:50:07.12345Z");
-		postProjectInstance.put("finishDate", "2020-08-13T20:50:07.12345Z");
+		postTaskInstance = new HashMap<>();
+		postTaskInstance.put("projectId", 1L);
+		postTaskInstance.put("responsibleId", 3L);
+		postTaskInstance.put("name", "X3 24");
+		postTaskInstance.put("description", "test Description task inserteee");
+		postTaskInstance.put("startDate", "2020-07-13T20:50:07.12345Z");
+		postTaskInstance.put("finishDate", "2020-08-13T20:50:07.12345Z");
+		postTaskInstance.put("completed", 1L);
 		
-		putProjectInstance = new HashMap<>();
-		putProjectInstance.put("name", "meu projeto 2");
-		putProjectInstance.put("description", "test Description RA 2");
-		putProjectInstance.put("startDate", "2022-07-13T20:50:07.12345Z");
-		putProjectInstance.put("finishDate", "2022-08-13T20:50:07.12345Z");
-		
+		putTaskInstance = new HashMap<>();
+		putTaskInstance.put("projectId", 2L);
+		putTaskInstance.put("responsibleId", 1L);
+		putTaskInstance.put("name", "X11");
+		putTaskInstance.put("description", "testsssssss Description task inserteee");
+		putTaskInstance.put("startDate", "2020-08-13T20:50:07.12345Z");
+		putTaskInstance.put("finishDate", "2020-09-13T20:50:07.12345Z");
+		putTaskInstance.put("completed", 1L);
 	}
 	
 	@Test
-	public void findByIdShouldReturnProjectWhenIdExisting() {
+	public void findByIdShouldReturnTaskWhenIdExisting() {
 
-		existingProjectId = 2L;
+		existingTaskId = 2L;
 
 			given()
 			.header("Content.type", "application/json")
@@ -71,20 +76,22 @@ public class ProjectControllerRA {
 			.contentType(ContentType.JSON)
 			.accept(ContentType.JSON)
 		.when()
-			.get("/projects/{id}", existingProjectId)
+			.get("/task/{id}", existingTaskId)
 		.then()
 			.statusCode(200)
-			.body("name", equalTo("test 2"))
-			.body("description", equalTo("test descrição 2"))
-			.body("startDate", equalTo("2020-08-13T22:33:07.123450Z"))
-			.body("finishDate", equalTo("2020-07-15T16:15:22.123450Z"))
-			.body("tasks.id", hasItems(2,3));
+			.body("id", is(2))
+			.body("name", equalTo("task 2"))
+			.body("description", equalTo(" descrição da tarefa do projeto 2"))
+			.body("startDate", equalTo("2020-07-13T20:50:07.123450Z"))
+			.body("finishDate", equalTo("2020-07-15T14:33:25.123450Z"))
+			.body("projectId", is(2))
+			.body("projectName",equalTo("test 2"));
 	}
 	
 	@Test
-	public void findByIdShouldReturnProjectWhenIdNonExisting() {
+	public void findByIdShouldReturnTaskWhenIdNonExisting() {
 
-		nonExistingProjectId = 100L;
+		nonExistingTaskId = 100L;
 
 			given()
 			.header("Content.type", "application/json")
@@ -92,7 +99,7 @@ public class ProjectControllerRA {
 			.contentType(ContentType.JSON)
 			.accept(ContentType.JSON)
 		.when()
-			.get("/projects/{id}", nonExistingProjectId)
+			.get("/task/{id}", nonExistingTaskId)
 		.then()
 			.statusCode(404);
 	}
@@ -100,7 +107,7 @@ public class ProjectControllerRA {
 	@Test
 	public void findByIdShouldReturnNotFoundWhenIdDoesNotExistAndAdminOrMemberLogged() {
 
-		nonExistingProjectId = 100L;
+		nonExistingTaskId = 100L;
 
 			given()
 			.header("Content.type", "application/json")
@@ -108,7 +115,7 @@ public class ProjectControllerRA {
 			.contentType(ContentType.JSON)
 			.accept(ContentType.JSON)
 		.when()
-			.get("/projects/{id}", nonExistingProjectId)
+			.get("/task/{id}", nonExistingTaskId)
 		.then()
 			.statusCode(401);
 	}
@@ -119,30 +126,28 @@ public class ProjectControllerRA {
 		given()
 			.header("Content.type", "application/json")
 			.header("Authorization", "Bearer " + adminToken)
-			.get("/projects?page=0")
+			.get("/task?page=0")
 		.then()
 			.statusCode(200)
-			.body("content.name", hasItems("test 1", "test 2"));
+			.body("content.name", hasItems("task 1", "task 2"));
 	}
 	
 	@Test
-	public void findAllShouldReturnPagedProjectsWhenProjectsNameParamIsNotEmpty() {
+	public void findAllShouldReturnPagedTaskssWhenProjectsNameParamIsNotEmpty() {
 		
 		given()
 			.header("Content.type", "application/json")
 			.header("Authorization", "Bearer " + adminToken)
-			.get("/projects?name={projectName}", projectName)
+			.get("/task?name={projectName}", taskName)
 		.then()
 			.statusCode(200)
 			.body("content.id[0]", is(1))
-			.body("content.name[0]", equalTo("test 1"));
+			.body("content.name[0]", equalTo("task 1"));
 	}
 	
-	
-	
 	@Test
-	public void insertShouldReturnProjectCreatedWhenLoggedAsAdmin() {
-		JSONObject newProduct = new JSONObject(postProjectInstance);
+	public void insertShouldReturnTaskCreatedWhenLoggedAsAdmin() {
+		JSONObject newProduct = new JSONObject(postTaskInstance);
 		
 		given()
 			.header("Content.type", "application/json")
@@ -151,15 +156,14 @@ public class ProjectControllerRA {
 			.contentType(ContentType.JSON)
 			.accept(ContentType.JSON)
 		.when()
-			.post("/projects")
+			.post("/task")
 		.then()
 			.statusCode(201);
-
 	}
 	
 	@Test
-	public void  insertShouldReturnUnauthorizedWhenInvalidToken() {
-		JSONObject newProduct = new JSONObject(postProjectInstance);
+	public void insertShouldReturnTaskReturnUnauthorizedWhenInvalidToken() {
+		JSONObject newProduct = new JSONObject(postTaskInstance);
 		
 		given()
 			.header("Content.type", "application/json")
@@ -168,16 +172,15 @@ public class ProjectControllerRA {
 			.contentType(ContentType.JSON)
 			.accept(ContentType.JSON)
 		.when()
-			.post("/projects")
+			.post("/task")
 		.then()
 			.statusCode(401);
-
 	}
 	
 	@Test
 	public void insertShouldReturnUnprocessableEntityWhenAdminLoggedAndInvalidName() {
-		postProjectInstance.put("name", "");
-		JSONObject newProduct = new JSONObject(postProjectInstance);
+		postTaskInstance.put("name", "");
+		JSONObject newProduct = new JSONObject(postTaskInstance);
 		
 		
 		given()
@@ -187,7 +190,7 @@ public class ProjectControllerRA {
 			.contentType(ContentType.JSON)
 			.accept(ContentType.JSON)
 		.when()
-			.post("/projects")
+			.post("/task")
 		.then()
 			.statusCode(422)
 			.body("errors.message[0]", equalTo("Campo obrigatório"));	
@@ -196,8 +199,8 @@ public class ProjectControllerRA {
 	@Test
 	public void insertShouldReturnUnprocessableEntityWhenAdminLoggedAndInvalidDate() {
 		
-		postProjectInstance.put("finishDate", "2020-06-13T20:50:07.12345Z");
-		JSONObject newProduct = new JSONObject(postProjectInstance);
+		postTaskInstance.put("finishDate", "2020-06-13T20:50:07.12345Z");
+		JSONObject newProduct = new JSONObject(postTaskInstance);
 		
 		given()
 			.header("Content.type", "application/json")
@@ -206,16 +209,16 @@ public class ProjectControllerRA {
 			.contentType(ContentType.JSON)
 			.accept(ContentType.JSON)
 		.when()
-			.post("/projects")
+			.post("/task")
 		.then()
 			.statusCode(422);
 	}
 	
 	@Test
-	public void updateShouldReturnProjectCreatedWhenLoggedAsAdmin() {
-		JSONObject newProduct = new JSONObject(putProjectInstance);
+	public void updateShouldReturnTaskCreatedWhenLoggedAsAdmin() {
+		JSONObject newProduct = new JSONObject(putTaskInstance);
 		
-		existingProjectId = 3L;
+		existingTaskId = 3L;
 		
 		given()
 			.header("Content.type", "application/json")
@@ -224,17 +227,16 @@ public class ProjectControllerRA {
 			.contentType(ContentType.JSON)
 			.accept(ContentType.JSON)
 		.when()
-			.put("/projects/{id}", existingProjectId)
+			.put("/task/{id}", existingTaskId)
 		.then()
-			.statusCode(200);
-			
+			.statusCode(200);	
 	}
 	
 	@Test
 	public void updateShouldReturnForbbidenWhenLoggedAsMember() {
-		JSONObject newProduct = new JSONObject(putProjectInstance);
+		JSONObject newProduct = new JSONObject(putTaskInstance);
 		
-		existingProjectId = 3L;
+		existingTaskId = 3L;
 		
 		given()
 			.header("Content.type", "application/json")
@@ -243,69 +245,59 @@ public class ProjectControllerRA {
 			.contentType(ContentType.JSON)
 			.accept(ContentType.JSON)
 		.when()
-			.put("/projects/{id}", existingProjectId)
+			.put("/task/{id}", existingTaskId)
 		.then()
 			.statusCode(403);	
 	}
 	
 	@Test
 	public void deleteShouldReturnNotContentWhenIdExistingAndAdminLogged() {
-		existingProjectId = 5L;
+		existingTaskId = 5L;
 		
 		given()
 			.header("Authorization", "Bearer " + adminToken)
 		.when()
-			.delete("/projects/{id}", existingProjectId)
+			.delete("/task/{id}", existingTaskId)
 		.then()
 			.statusCode(204);	
 	}
 
 	@Test
 	public void deleteShouldReturnNotFoundWhenIdDoesNotExistAndAdminLogged() throws Exception {
-		nonExistingProjectId = 100L;
+		nonExistingTaskId = 100L;
 		
 		given()
 			.header("Authorization", "Bearer " + adminToken)
 		.when()
-			.delete("/projects/{id}", nonExistingProjectId)
+			.delete("/task/{id}", nonExistingTaskId)
 		.then()
 			.statusCode(404)
 			.body("status", equalTo(404));
 	}
 	
-	@Test
-	public void deleteShouldReturnBadRequestWhenIdIsDependentAndAdminLogged() throws Exception {
-		dependentProjectId = 3L;
-		
-		given()
-			.header("Authorization", "Bearer " + adminToken)
-		.when()
-			.delete("/projects/{id}", dependentProjectId)
-		.then()
-			.statusCode(400);
-	}
 	
 	@Test
 	public void deleteShouldReturnForbiddenWhenIdExistsAndMemberLogged() throws Exception {
-		existingProjectId = 5L;
+		existingTaskId = 5L;
 		
 		given()
 			.header("Authorization", "Bearer " + memberToken)
 		.when()
-			.delete("/projects/{id}", existingProjectId)
+			.delete("/task/{id}", existingTaskId)
 		.then()
 			.statusCode(403);
 	}
 	
 	@Test
 	public void deleteShouldReturnUnauthorizedWhenIdExistsAndInvalidToken() throws Exception {
-		existingProjectId = 25L;
+		existingTaskId = 25L;
 		
 		given()
 			.header("Authorization", "Bearer " + invalidToken)
 		.when()
-			.delete("/projects/{id}", existingProjectId)
+			.delete("/task/{id}", existingTaskId)
 		.then()
 			.statusCode(401);
 	}
+
 }
