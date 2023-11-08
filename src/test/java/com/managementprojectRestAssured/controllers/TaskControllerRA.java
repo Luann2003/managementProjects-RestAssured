@@ -23,7 +23,7 @@ public class TaskControllerRA {
 	private String memberUsername, memberPassword, adminUsername, adminPassword;
 	private String adminToken, memberToken, invalidToken;
 	
-	private Long existingTaskId, nonExistingTaskId, dependentTaskId;
+	private Long existingTaskId, nonExistingTaskId;
 	
 	private String taskName;
 	
