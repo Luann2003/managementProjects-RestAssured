@@ -25,8 +25,6 @@ public class UserControllerRA {
 	
 	private Long existingUserId, nonExistingUserId;
 	
-	private String userName;
-	
 	private Map<String, Object> postUserInstance;
 	private Map<String, Object> putUserInstance;
 	
@@ -34,7 +32,6 @@ public class UserControllerRA {
 	public void setup() throws JSONException {
 		
 		baseURI = "http://localhost:8080";
-		userName = "Luan Victor";
 		
 		memberUsername = "maria@gmail.com";
 		memberPassword = "123456";
